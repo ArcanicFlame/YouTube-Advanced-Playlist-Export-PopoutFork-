@@ -6,7 +6,7 @@
       document.querySelector(
         isWatchPage
           ? "ytd-playlist-panel-renderer #header-contents h3 a, ytd-playlist-panel-renderer #header-description h3 a, ytd-playlist-panel-renderer #header-contents .title"
-          : "yt-dynamic-sizing-formatted-string#title, h1.style-scope.ytd-playlist-header-renderer"
+          : 'ytd-browse[page-subtype="playlist"]:not([hidden]) yt-page-header-view-model h1, yt-dynamic-sizing-formatted-string#title, h1.style-scope.ytd-playlist-header-renderer'
       )?.textContent?.trim() || "playlistExport";
 
     const safeTitle = rawTitle
