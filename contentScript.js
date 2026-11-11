@@ -1,22 +1,3 @@
-(() => {
-  const getPlaylistMetadata = (isWatchPage) => {
-    const playlistId = new URLSearchParams(window.location.search).get("list") || "unknown";
-
-    const rawTitle =
-      document.querySelector(
-        isWatchPage
-          ? "ytd-playlist-panel-renderer #header-contents h3 a, ytd-playlist-panel-renderer #header-description h3 a, ytd-playlist-panel-renderer #header-contents .title"
-          : "yt-dynamic-sizing-formatted-string#title, h1.style-scope.ytd-playlist-header-renderer"
-      )?.textContent?.trim() || "playlistExport";
-
-    const safeTitle = rawTitle
-      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
-      .replace(/\s+/g, "_")
-      .slice(0, 100);
-
-    return { playlistId, safeTitle };
-  };
-
   const collectVideos = (isWatchPage) => {
     const videos = [];
 
@@ -40,7 +21,8 @@
               ?.textContent?.trim() || "";
           const thumbnailUrl = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : "";
 
-          videos.push({ title, viewCount: "", publishedDate: "", author, length, videoId, videoUrl, thumbnailUrl });
+          // Only include fields available in the watch panel DOM
+          videos.push({ title, author, length, videoId, videoUrl, thumbnailUrl });
         }
       }
     } else {
@@ -69,7 +51,11 @@
           const publishedDate =
             container.querySelector("yt-formatted-string#video-info span:nth-child(3)")?.textContent?.trim() || "";
 
-          videos.push({ title, viewCount, publishedDate, author, length, videoId, videoUrl, thumbnailUrl });
+          const videoData = { title, author, length, videoId, videoUrl, thumbnailUrl };
+          if (viewCount) videoData.viewCount = viewCount;
+          if (publishedDate) videoData.publishedDate = publishedDate;
+
+          videos.push(videoData);
         }
       }
     }
@@ -84,16 +70,28 @@
     }
 
     if (exportType === "csv") {
-      const headers = ["Title", "View Count", "Published Date", "Author", "Length", "Video ID", "Video URL", "Thumbnail URL"];
+      const schema = [
+        { header: "Title", key: "title" },
+        { header: "Author", key: "author" },
+        { header: "Length", key: "length" },
+        { header: "View Count", key: "viewCount" },
+        { header: "Published Date", key: "publishedDate" },
+        { header: "Video ID", key: "videoId" },
+        { header: "Video URL", key: "videoUrl" },
+        { header: "Thumbnail URL", key: "thumbnailUrl" }
+      ];
       const escapeCsv = (val) => `"${String(val ?? "").replace(/"/g, '""')}"`;
-      const rows = videos.map((video) => Object.values(video).map(escapeCsv).join(","));
-      const csv = [headers.join(","), ...rows].join("\n");
+      const headers = schema.map((col) => col.header).join(",");
+      const rows = videos.map((video) => schema.map((col) => escapeCsv(video[col.key])).join(","));
+      const csv = [headers, ...rows].join("\n");
       return new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     }
 
+    // TXT: Omit any null, undefined, or empty string properties
     const txt = videos
       .map((video) =>
         Object.entries(video)
+          .filter(([, val]) => val !== null && val !== undefined && val !== "")
           .map(([key, val]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${val}`)
           .join("\n")
       )
@@ -102,36 +100,3 @@
     return new Blob([txt], { type: "text/plain;charset=utf-8;" });
   };
 
-  const scrapPlaylist = (exportType) => {
-    const isWatchPage = window.location.pathname === "/watch";
-    const { playlistId, safeTitle } = getPlaylistMetadata(isWatchPage);
-    const videos = collectVideos(isWatchPage);
-
-    if (videos.length === 0) {
-      console.warn("[Playlist Export] No playlist videos found on this page.");
-      return;
-    }
-
-    const blob = buildBlob(videos, exportType);
-    const objectUrl = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = objectUrl;
-    a.download = `${safeTitle}_[${playlistId}].${exportType}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-  };
-
-  chrome.runtime.onMessage.addListener((request) => {
-    if (request.action === "scrapPlaylistJson") {
-      scrapPlaylist("json");
-    } else if (request.action === "scrapPlaylistCsv") {
-      scrapPlaylist("csv");
-    } else if (request.action === "scrapPlaylistTxt") {
-      scrapPlaylist("txt");
-    }
-  });
-})();
