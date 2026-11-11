@@ -58,4 +58,5 @@ span {
   gap: 6px;
   border-top: 1px solid #334155;
   padding-top: 10px;
+  flex-wrap: wrap
 }
