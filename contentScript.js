@@ -38,7 +38,7 @@
             item
               .querySelector("ytd-thumbnail-overlay-time-status-renderer #text, badge-shape .badge-shape-wiz__text")
               ?.textContent?.trim() || "";
-          const thumbnailUrl = videoId ? `https://i.ytimg.com/vi/${videoId}hqdefault.jpg` : "";
+          const thumbnailUrl = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : "";
 
           videos.push({ title, viewCount: "", publishedDate: "", author, length, videoId, videoUrl, thumbnailUrl });
         }
@@ -62,7 +62,7 @@
               ?.textContent?.trim() || "";
           const thumbnailUrl =
             container.querySelector("yt-image img")?.getAttribute("src") ||
-            (videoId ? `https://i.ytimg.com/vi/${videoId}hqdefault.jpg` : "");
+            (videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : "");
           const author = container.querySelector("ytd-channel-name yt-formatted-string a")?.textContent?.trim() || "";
           const viewCount =
             container.querySelector("yt-formatted-string#video-info span:nth-child(1)")?.textContent?.trim() || "";
