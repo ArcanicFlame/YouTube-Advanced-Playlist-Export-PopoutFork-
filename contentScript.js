@@ -1,3 +1,21 @@
+(() => {
+  const getPlaylistMetadata = (isWatchPage) => {
+    const playlistId = new URLSearchParams(window.location.search).get("list") || "unknown";
+
+    const rawTitle =
+      document.querySelector(
+        isWatchPage
+          ? "ytd-playlist-panel-renderer #header-contents h3 a, ytd-playlist-panel-renderer #header-description h3 a, ytd-playlist-panel-renderer #header-contents .title"
+          : "yt-dynamic-sizing-formatted-string#title, h1.style-scope.ytd-playlist-header-renderer"
+      )?.textContent?.trim() || "playlistExport";
+
+    const safeTitle = rawTitle
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
+      .replace(/\s+/g, "_")
+      .slice(0, 100);
+
+    return { playlistId, safeTitle };
+  };
   const collectVideos = (isWatchPage) => {
     const videos = [];
 
@@ -99,4 +117,38 @@
 
     return new Blob([txt], { type: "text/plain;charset=utf-8;" });
   };
+  
+    const scrapPlaylist = (exportType) => {
+    const isWatchPage = window.location.pathname === "/watch";
+    const { playlistId, safeTitle } = getPlaylistMetadata(isWatchPage);
+    const videos = collectVideos(isWatchPage);
+
+    if (videos.length === 0) {
+      console.warn("[Playlist Export] No playlist videos found on this page.");
+      return;
+    }
+
+    const blob = buildBlob(videos, exportType);
+    const objectUrl = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = `${safeTitle}_[${playlistId}].${exportType}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  };
+
+  chrome.runtime.onMessage.addListener((request) => {
+    if (request.action === "scrapPlaylistJson") {
+      scrapPlaylist("json");
+    } else if (request.action === "scrapPlaylistCsv") {
+      scrapPlaylist("csv");
+    } else if (request.action === "scrapPlaylistTxt") {
+      scrapPlaylist("txt");
+    }
+  });
+})();
 
