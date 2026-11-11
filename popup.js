@@ -1,26 +1,18 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const jsonBtn = document.getElementById("jsonBtn");
-  const csvBtn = document.getElementById("csvBtn");
-  const txtBtn = document.getElementById("txtBtn");
+document.addEventListener("DOMContentLoaded", () => {
+  const triggerExport = (action) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+      if (!activeTab?.id) return;
 
-  if (jsonBtn) {
-    jsonBtn.addEventListener("click", function () {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        const activeTab = tabs[0];
-        chrome.tabs.sendMessage(activeTab.id, { action: "scrapPlaylistJson" });
+      chrome.tabs.sendMessage(activeTab.id, { action }, () => {
+        if (chrome.runtime.lastError) {
+          console.warn("[Playlist Export] Please open a YouTube playlist or watch page first.");
+        }
       });
     });
-    csvBtn.addEventListener("click", function () {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        const activeTab = tabs[0];
-        chrome.tabs.sendMessage(activeTab.id, { action: "scrapPlaylistCsv" });
-      });
-    });
-    txtBtn.addEventListener("click", function () {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        const activeTab = tabs[0];
-        chrome.tabs.sendMessage(activeTab.id, { action: "scrapPlaylistTxt" });
-      });
-    });
-  }
+  };
+
+  document.getElementById("jsonBtn")?.addEventListener("click", () => triggerExport("scrapPlaylistJson"));
+  document.getElementById("csvBtn")?.addEventListener("click", () => triggerExport("scrapPlaylistCsv"));
+  document.getElementById("txtBtn")?.addEventListener("click", () => triggerExport("scrapPlaylistTxt"));
 });
