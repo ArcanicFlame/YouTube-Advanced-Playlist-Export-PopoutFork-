@@ -16,7 +16,8 @@
 
     return { playlistId, safeTitle };
   };
-  const collectVideos = (isWatchPage) => {
+  
+    const collectVideos = (isWatchPage) => {
     const videos = [];
 
     if (isWatchPage) {
