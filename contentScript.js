@@ -5,7 +5,7 @@
     const rawTitle =
       document.querySelector(
         isWatchPage
-          ? "ytd-playlist-panel-renderer #header-description h3 a, ytd-playlist-panel-renderer .title"
+          ? "ytd-playlist-panel-renderer #header-contents h3 a, ytd-playlist-panel-renderer #header-description h3 a, ytd-playlist-panel-renderer #header-contents .title"
           : "yt-dynamic-sizing-formatted-string#title, h1.style-scope.ytd-playlist-header-renderer"
       )?.textContent?.trim() || "playlistExport";
 
@@ -31,14 +31,14 @@
 
         if (href && href.startsWith("/watch")) {
           const videoId = new URL(window.location.origin + href).searchParams.get("v") || "";
-          const videoUrl = videoId ? `https://youtube.com{videoId}` : "";
+          const videoUrl = videoId ? `https://youtube.com/watch?v=${videoId}` : "";
           const title = item.querySelector("#video-title")?.textContent?.trim() || "";
           const author = item.querySelector("span#byline")?.textContent?.trim() || "";
           const length =
             item
               .querySelector("ytd-thumbnail-overlay-time-status-renderer #text, badge-shape .badge-shape-wiz__text")
               ?.textContent?.trim() || "";
-          const thumbnailUrl = videoId ? `https://ytimg.com{videoId}/hqdefault.jpg` : "";
+          const thumbnailUrl = videoId ? `https://i.ytimg.com${videoId}/vi/hqdefault.jpg` : "";
 
           videos.push({ title, viewCount: "", publishedDate: "", author, length, videoId, videoUrl, thumbnailUrl });
         }
@@ -54,7 +54,7 @@
 
         if (href && href.startsWith("/watch")) {
           const videoId = new URL(window.location.origin + href).searchParams.get("v") || "";
-          const videoUrl = videoId ? `https://youtube.com{videoId}` : "";
+          const videoUrl = videoId ? `https://youtube.com/watch?v=${videoId}` : "";
           const title = titleEl?.textContent?.trim() || "";
           const length =
             container
@@ -62,7 +62,7 @@
               ?.textContent?.trim() || "";
           const thumbnailUrl =
             container.querySelector("yt-image img")?.getAttribute("src") ||
-            (videoId ? `https://ytimg.com{videoId}/hqdefault.jpg` : "");
+            (videoId ? `https://i.ytimg.com${videoId}/vi/hqdefault.jpg` : "");
           const author = container.querySelector("ytd-channel-name yt-formatted-string a")?.textContent?.trim() || "";
           const viewCount =
             container.querySelector("yt-formatted-string#video-info span:nth-child(1)")?.textContent?.trim() || "";
